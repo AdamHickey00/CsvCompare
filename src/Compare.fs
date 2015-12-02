@@ -8,7 +8,7 @@
     type contactInput = CsvProvider<"./data/templates/ContactInput.csv">
     type leadInput = CsvProvider<"./data/templates/LeadInput.csv">
     type contactOutput = CsvProvider<"./data/templates/ContactOutput.csv">
-    type leadOutput = CsvProvider<"./data/templates/LeadInputOutput.csv">
+    type leadOutput = CsvProvider<"./data/templates/LeadOutput.csv">
 
     let httpPrefix = "https://na28.salesforce.com/"
 
@@ -37,28 +37,27 @@
 
         result
 
-    let emailMatches (email:string) (contacts:contactInput) (leads:leadInput) =
-        let existsInContacts = 
-            contacts.Rows 
-            |> Seq.exists(fun row -> String.Equals(row.Email, email, StringComparison.OrdinalIgnoreCase))
+    let leadEmailExists (email:string) (leads:leadInput) =
+        leads.Rows 
+        |> Seq.exists(fun row -> not(String.IsNullOrEmpty(row.Email))
+                                 && String.Equals(row.Email, email, StringComparison.OrdinalIgnoreCase))
 
-        let existsInLeads = 
+    let getLeadOutputRow (inputRow:inputFile.Row) (leads:leadInput) =
+        let result = 
             leads.Rows 
-            |> Seq.exists(fun row -> String.Equals(row.Email, email, StringComparison.OrdinalIgnoreCase))
+            |> Seq.filter(fun row -> not(String.IsNullOrEmpty(row.Email))
+                                     && String.Equals(row.Email, inputRow.``Email Address``, StringComparison.OrdinalIgnoreCase))        
+            |> Seq.map(fun row -> 
+                        new leadOutput.Row(
+                            httpPrefix + row.``Lead Long ID``, 
+                            row.``Lead Owner``, 
+                            inputRow.``First Name``, 
+                            inputRow.``Last Name``, 
+                            inputRow.Company,
+                            inputRow.``Email Address``, 
+                            inputRow.``Work City``, 
+                            inputRow.``Work State``)
+                       )
+            |> Seq.head
 
-        existsInContacts || existsInLeads
-
-    let namesMatch (firstName:string) (lastName:string) (contacts:contactInput) (leads:leadInput) =
-        let existsInContacts = 
-            contacts.Rows 
-            |> Seq.exists(fun row -> 
-                            String.Equals(row.``First Name``, firstName, StringComparison.OrdinalIgnoreCase)
-                            && String.Equals(row.``Last Name``, lastName, StringComparison.OrdinalIgnoreCase))
-
-        let existsInLeads = 
-            leads.Rows 
-            |> Seq.exists(fun row -> 
-                            String.Equals(row.``First Name``, firstName, StringComparison.OrdinalIgnoreCase)
-                            && String.Equals(row.``Last Name``, lastName, StringComparison.OrdinalIgnoreCase))
-
-        existsInContacts || existsInLeads
+        result

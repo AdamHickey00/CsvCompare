@@ -3,19 +3,6 @@ open FSharp.Data
 open System
 open System.Linq
 
-    // take contacts first, then check leads
-
-    // 
-
-
-    // leads
-    // hyperlink + lead long id
-    // record owner
-
-    // contacts
-    // hyperlink + contact id
-    // hyperlink + account long id
-
 [<EntryPoint>]
 let main argv = 
     let inputData = inputFile.Load("../../data/input/InputFile.csv")
@@ -42,23 +29,26 @@ let main argv =
     let contactEmailOutput = contactEmailOutput.Append contactMatchedEmails
     contactEmailOutput.Save("../../data/output/ContactMatchedEmails.csv")
 
-
-
-
     // matched leads by email
+    Console.WriteLine("Checking lead records for emails...")
+    let leadEmailOutput = new leadOutput()
+    let leadEmailOutput = leadEmailOutput.Take(0) // do this to remove sample row
 
-    //Console.WriteLine("Checking lead records for emails...")
-    //let leadMatchedEmails = inputData.Filter(fun row -> emailMatches row.``Email Address`` contacts leads)
-    //leadMatchedEmails.Save("../../data/output/LeadMatchedEmails.csv")
-    //Console.WriteLine(sprintf "Found %i matched emails" (leadMatchedEmails.Rows.Count()))
+    let leadMatchedEmails = 
+        inputData.Rows
+        |> Seq.filter(fun row -> leadEmailExists row.``Email Address`` leads)
+        |> Seq.map(fun row -> getLeadOutputRow row leads)
+        |> Seq.toArray
 
-    //let unMatched = inputData.Filter(fun row -> not (emailMatches row.``Email Address`` contacts leads))
-    
-    
+    Console.WriteLine(sprintf "Found %i matched lead emails" (leadMatchedEmails.Count()))
+
+    let leadEmailOutput = leadEmailOutput.Append leadMatchedEmails
+    leadEmailOutput.Save("../../data/output/LeadMatchedEmails.csv")
+
+    // get list of found emails and filter out input data by those emails
 
 
 
-    
 
     // matched by name exactly
     //Console.WriteLine("Checking names...")

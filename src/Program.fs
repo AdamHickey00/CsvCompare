@@ -1,24 +1,22 @@
 ﻿open Compare
+open Contacts
+open Leads
 open FSharp.Data
 open System
 open System.Linq
-
-let outputFolder = "../../data/output/"
-let contactEmailOutputFile = outputFolder + "ContactMatchedEmails.csv"
-let leadEmailOutputFile = outputFolder + "LeadMatchedEmails.csv"
-let unMatchedOutputFile = outputFolder + "UnMatched.csv"
-
-let deleteFiles files =
-    for file in files do
-        if System.IO.File.Exists(file) then
-            System.IO.File.Delete(file)
 
 [<EntryPoint>]
 let main argv = 
     let inputData = inputFile.Load("../../data/input/InputFile.csv")
     let contacts = contactInput.Load("../../data/input/ContactExport.csv")
     let leads = leadInput.Load("../../data/input/LeadExport.csv")
-    deleteFiles [contactEmailOutputFile; leadEmailOutputFile; unMatchedOutputFile]
+    deleteFiles [contactEmailOutputFile; 
+                 leadEmailOutputFile; 
+                 contactNameOutputFile; 
+                 leadNameOutputFile; 
+                 contactNameFuzzyOutputFile;
+                 leadNameFuzzyOutputFile
+                 unMatchedOutputFile]
 
     Console.WriteLine(sprintf "Total input data rows = %i " (inputData.Rows.Count()))
     Console.WriteLine(sprintf "Total contacts rows = %i " (contacts.Rows.Count()))
@@ -27,34 +25,35 @@ let main argv =
     // get matched contact emails
     let contactEmailOutput = getMatchedContactsByEmail inputData.Rows contacts
     contactEmailOutput.Save(contactEmailOutputFile)
-
-    let contactEmails = 
-        contactEmailOutput.Rows |> Seq.map(fun row -> row.``Email Address``.ToLower())
-
-    let unMatched = 
-        inputData.Filter(fun row -> not (contactEmails.Contains(row.``Email Address``.ToLower())))
+    let unMatched = inputData.Filter(fun row -> not (contactEmailExists row contacts))
  
     // get matched lead emails
     let leadEmailOutput = getMatchedLeadsByEmail unMatched.Rows leads
     leadEmailOutput.Save(leadEmailOutputFile)
+    let unMatched = unMatched.Filter(fun row -> not (leadEmailExists row leads))
 
-    let leadEmails = 
-        leadEmailOutput.Rows |> Seq.map(fun row -> row.``Email Address``.ToLower())
+    // get matched contact names
+    let contactNameOutput = getMatchedContactsByName unMatched.Rows contacts
+    contactNameOutput.Save(contactNameOutputFile)
+    let unMatched = unMatched.Filter(fun row -> not (contactNameExists row contacts))
 
-    let unMatched = 
-        unMatched.Filter(fun row -> not (leadEmails.Contains(row.``Email Address``.ToLower())))
+    // get matched lead names
+    let leadNameOutput = getMatchedLeadsByName unMatched.Rows leads
+    leadNameOutput.Save(leadNameOutputFile)
+    let unMatched = unMatched.Filter(fun row -> not (leadNameExists row leads))
 
+    // get matched fuzzy contact names
+    let contactFuzzyNameOutput = getMatchedContactsByFuzzyName unMatched.Rows contacts
+    contactFuzzyNameOutput.Save(contactNameFuzzyOutputFile)
+    let unMatched = unMatched.Filter(fun row -> not (contactFuzzyNameExists row contacts))
+
+    // get matched fuzzy lead names
+    let leadFuzzyNameOutput = getMatchedLeadsByFuzzyName unMatched.Rows leads
+    leadFuzzyNameOutput.Save(leadNameFuzzyOutputFile)
+    let unMatched = unMatched.Filter(fun row -> not (leadFuzzyNameExists row leads))
+
+    // save unmatched records
+    Console.WriteLine("Saving unmatched records...")
     unMatched.Save(unMatchedOutputFile)
-
-    // matched by name exactly
-    //Console.WriteLine("Checking names...")
-    //let matchedNames = unMatched.Filter(fun row -> namesMatch row.``First Name`` row.``Last Name`` contacts leads)
-    //let unMatchedNames = unMatched.Filter(fun row -> not (namesMatch row.``First Name`` row.``Last Name`` contacts leads))
-    //Console.WriteLine(sprintf "Found %i matched names" (matchedNames.Rows.Count()))
-
-    // last name plus first three letters of first name fuzzy
-
-
-    //unMatchedNames.Save("../../data/output/NeedsReview.csv")
 
     0 

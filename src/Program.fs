@@ -3,52 +3,48 @@ open FSharp.Data
 open System
 open System.Linq
 
+let outputFolder = "../../data/output/"
+let contactEmailOutputFile = outputFolder + "ContactMatchedEmails.csv"
+let leadEmailOutputFile = outputFolder + "LeadMatchedEmails.csv"
+let unMatchedOutputFile = outputFolder + "UnMatched.csv"
+
+let deleteFiles files =
+    for file in files do
+        if System.IO.File.Exists(file) then
+            System.IO.File.Delete(file)
+
 [<EntryPoint>]
 let main argv = 
     let inputData = inputFile.Load("../../data/input/InputFile.csv")
     let contacts = contactInput.Load("../../data/input/ContactExport.csv")
-    let leads = leadInput.Load("../../data/input/LeadExport.csv")   
+    let leads = leadInput.Load("../../data/input/LeadExport.csv")
+    deleteFiles [contactEmailOutputFile; leadEmailOutputFile; unMatchedOutputFile]
 
     Console.WriteLine(sprintf "Total input data rows = %i " (inputData.Rows.Count()))
     Console.WriteLine(sprintf "Total contacts rows = %i " (contacts.Rows.Count()))
     Console.WriteLine(sprintf "Total leads rows = %i " (leads.Rows.Count()))
 
-    // matched contacts by email
-    Console.WriteLine("Checking contact records for emails...")
-    let contactEmailOutput = new contactOutput()
-    let contactEmailOutput = contactEmailOutput.Take(0) // do this to remove sample row
+    // get matched contact emails
+    let contactEmailOutput = getMatchedContactsByEmail inputData.Rows contacts
+    contactEmailOutput.Save(contactEmailOutputFile)
 
-    let contactMatchedEmails = 
-        inputData.Rows
-        |> Seq.filter(fun row -> contactEmailExists row.``Email Address`` contacts)
-        |> Seq.map(fun row -> getContactOutputRow row contacts)
-        |> Seq.toArray
+    let contactEmails = 
+        contactEmailOutput.Rows |> Seq.map(fun row -> row.``Email Address``.ToLower())
 
-    Console.WriteLine(sprintf "Found %i matched contact emails" (contactMatchedEmails.Count()))
+    let unMatched = 
+        inputData.Filter(fun row -> not (contactEmails.Contains(row.``Email Address``.ToLower())))
+ 
+    // get matched lead emails
+    let leadEmailOutput = getMatchedLeadsByEmail unMatched.Rows leads
+    leadEmailOutput.Save(leadEmailOutputFile)
 
-    let contactEmailOutput = contactEmailOutput.Append contactMatchedEmails
-    contactEmailOutput.Save("../../data/output/ContactMatchedEmails.csv")
+    let leadEmails = 
+        leadEmailOutput.Rows |> Seq.map(fun row -> row.``Email Address``.ToLower())
 
-    // matched leads by email
-    Console.WriteLine("Checking lead records for emails...")
-    let leadEmailOutput = new leadOutput()
-    let leadEmailOutput = leadEmailOutput.Take(0) // do this to remove sample row
+    let unMatched = 
+        unMatched.Filter(fun row -> not (leadEmails.Contains(row.``Email Address``.ToLower())))
 
-    let leadMatchedEmails = 
-        inputData.Rows
-        |> Seq.filter(fun row -> leadEmailExists row.``Email Address`` leads)
-        |> Seq.map(fun row -> getLeadOutputRow row leads)
-        |> Seq.toArray
-
-    Console.WriteLine(sprintf "Found %i matched lead emails" (leadMatchedEmails.Count()))
-
-    let leadEmailOutput = leadEmailOutput.Append leadMatchedEmails
-    leadEmailOutput.Save("../../data/output/LeadMatchedEmails.csv")
-
-    // get list of found emails and filter out input data by those emails
-
-
-
+    unMatched.Save(unMatchedOutputFile)
 
     // matched by name exactly
     //Console.WriteLine("Checking names...")

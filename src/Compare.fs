@@ -61,3 +61,37 @@
             |> Seq.head
 
         result
+
+    let getMatchedContactsByEmail (inputData:seq<inputFile.Row>) (contacts:contactInput) =
+
+        // matched contacts by email
+        Console.WriteLine("Checking contact records for emails...")
+        let contactEmailOutput = new contactOutput()
+        let contactEmailOutput = contactEmailOutput.Take(0) // do this to remove sample row
+
+        let contactMatchedEmails = 
+            inputData
+            |> Seq.filter(fun row -> contactEmailExists row.``Email Address`` contacts)
+            |> Seq.map(fun row -> getContactOutputRow row contacts)
+            |> Seq.toArray
+
+        Console.WriteLine(sprintf "Found %i matched contact emails" (contactMatchedEmails.Count()))
+
+        contactEmailOutput.Append contactMatchedEmails
+
+    let getMatchedLeadsByEmail (inputData:seq<inputFile.Row>) (leads:leadInput) =
+
+        // matched leads by email
+        Console.WriteLine("Checking lead records for emails...")
+        let leadEmailOutput = new leadOutput()
+        let leadEmailOutput = leadEmailOutput.Take(0) // do this to remove sample row
+
+        let leadMatchedEmails = 
+            inputData
+            |> Seq.filter(fun row -> leadEmailExists row.``Email Address`` leads)
+            |> Seq.map(fun row -> getLeadOutputRow row leads)
+            |> Seq.toArray
+
+        Console.WriteLine(sprintf "Found %i matched lead emails" (leadMatchedEmails.Count()))
+
+        leadEmailOutput.Append leadMatchedEmails

@@ -3,3 +3,4 @@ Bin
 Obj
 *.suo
 src/data/input/*.csv
+src/data/output/*.csv

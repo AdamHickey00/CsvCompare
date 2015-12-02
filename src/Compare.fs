@@ -14,12 +14,14 @@
 
     let contactEmailExists (email:string) (contacts:contactInput) =
         contacts.Rows 
-        |> Seq.exists(fun row -> String.Equals(row.Email, email, StringComparison.OrdinalIgnoreCase))
+        |> Seq.exists(fun row -> not(String.IsNullOrEmpty(row.Email))
+                                 && String.Equals(row.Email, email, StringComparison.OrdinalIgnoreCase))
 
     let getContactOutputRow (inputRow:inputFile.Row) (contacts:contactInput) = 
         let result = 
             contacts.Rows 
-            |> Seq.filter(fun row -> String.Equals(row.Email, inputRow.``Email Address``, StringComparison.OrdinalIgnoreCase))        
+            |> Seq.filter(fun row -> not(String.IsNullOrEmpty(row.Email))
+                                     && String.Equals(row.Email, inputRow.``Email Address``, StringComparison.OrdinalIgnoreCase))        
             |> Seq.map(fun row -> 
                         new contactOutput.Row(
                             httpPrefix + row.``Account Long ID``, 

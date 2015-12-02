@@ -29,6 +29,7 @@ let main argv =
     // matched contacts by email
     Console.WriteLine("Checking contact records for emails...")
     let contactEmailOutput = new contactOutput()
+    let contactEmailOutput = contactEmailOutput.Take(0) // do this to remove sample row
 
     let contactMatchedEmails = 
         inputData.Rows

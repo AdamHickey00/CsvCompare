@@ -37,6 +37,8 @@ let main argv =
         |> Seq.map(fun row -> getContactOutputRow row contacts)
         |> Seq.toArray
 
+    Console.WriteLine(sprintf "Found %i matched contact emails" (contactMatchedEmails.Count()))
+
     let contactEmailOutput = contactEmailOutput.Append contactMatchedEmails
     contactEmailOutput.Save("../../data/output/ContactMatchedEmails.csv")
 

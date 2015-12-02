@@ -10,6 +10,8 @@ let main argv =
     let allInputFilesPresent = checkInputFiles
 
     if allInputFilesPresent then
+        ensureOutputFolderExists
+
         let inputData = inputFile.Load(inputFileLocation)
         let contacts = contactInput.Load(contactsLocation)
         let leads = leadInput.Load(leadsLocation)

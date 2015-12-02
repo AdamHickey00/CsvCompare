@@ -35,4 +35,8 @@
             if File.Exists(file) then
                 File.Delete(file)
     
+    let ensureOutputFolderExists =
+        if not (Directory.Exists(outputFolder)) then
+            Directory.CreateDirectory(outputFolder) |> ignore
+
     let httpPrefix = "https://na28.salesforce.com/"

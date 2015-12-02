@@ -2,4 +2,4 @@ bin
 Bin
 Obj
 *.suo
-./src/data/input/*.csv
+src/data/input/*.csv

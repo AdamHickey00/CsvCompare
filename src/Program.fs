@@ -18,9 +18,9 @@ open System.Linq
 
 [<EntryPoint>]
 let main argv = 
-    let inputData = inputFile.Load("../../data/InputFile.csv")
-    let contacts = contactInput.Load("../../data/ContactExport.csv")
-    let leads = leadInput.Load("../../data/LeadExport.csv")   
+    let inputData = inputFile.Load("../../data/input/InputFile.csv")
+    let contacts = contactInput.Load("../../data/input/ContactExport.csv")
+    let leads = leadInput.Load("../../data/input/LeadExport.csv")   
 
     Console.WriteLine(sprintf "Total input data rows = %i " (inputData.Rows.Count()))
     Console.WriteLine(sprintf "Total contacts rows = %i " (contacts.Rows.Count()))

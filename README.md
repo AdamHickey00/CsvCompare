@@ -13,10 +13,16 @@ Template files are in the repository in the
 src/data/templates folder. The headers in these files 
 must match their corresponding input files.
 
+	1. ContactInput.csv - Contacts sample with header
+	2. ContactOutput.csv - Contacts output with ids prepended
+	3. InputTemplate.csv - 3rd party input file sample with header
+	4. LeadInput.csv - Leads sample with header
+	5. LeadOutput.csv - Leads output with ids prepended
+
 ## Input Files
 
 These are the source files the program uses to compare.
-They are located in src/data/input. They should be named
+They are located in src/data. They should be named
 as such:
 
 	1. InputFile.csv - 3rd Party file to use as source

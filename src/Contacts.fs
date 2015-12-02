@@ -1,6 +1,6 @@
 ﻿module Contacts
     
-    open Compare
+    open Files
     open FSharp.Data
     open System
     open System.Linq

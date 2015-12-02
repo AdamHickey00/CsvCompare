@@ -4,3 +4,4 @@ Obj
 *.suo
 src/data/input/*.csv
 src/data/output/*.csv
+src/data/*.csv

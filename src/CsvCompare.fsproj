@@ -53,7 +53,7 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Compare.fs" />
+    <Compile Include="Files.fs" />
     <Compile Include="Leads.fs" />
     <Compile Include="Contacts.fs" />
     <Compile Include="Program.fs" />

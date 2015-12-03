@@ -5,6 +5,17 @@ open Leads
 open System
 open System.Linq
 
+let matchContactOutput 
+    (inputData:Runtime.CsvFile<inputFile.Row>)
+    (contacts:contactInput) 
+    (getMatched:seq<inputFile.Row> -> contactInput -> Runtime.CsvFile<contactOutput.Row>) 
+    (comparison:inputFile.Row -> contactInput -> bool)
+    (outputFileName:string) =
+
+    let matchedOutput = getMatched inputData.Rows contacts
+    matchedOutput.Save(outputFileName)
+    inputData.Filter(fun row -> not (comparison row contacts))
+
 [<EntryPoint>]
 let main argv = 
     let allInputFilesPresent = checkInputFiles
@@ -29,9 +40,7 @@ let main argv =
         Console.WriteLine(sprintf "Total leads rows = %i " (leads.Rows.Count()))
 
         // get matched contact emails
-        let contactEmailOutput = getMatchedContactsByEmail inputData.Rows contacts
-        contactEmailOutput.Save(contactEmailOutputFile)
-        let unMatched = inputData.Filter(fun row -> not (contactEmailExists row contacts))
+        let unMatched = matchContactOutput inputData contacts getMatchedContactsByEmail contactEmailExists contactEmailOutputFile
  
         // get matched lead emails
         let leadEmailOutput = getMatchedLeadsByEmail unMatched.Rows leads
@@ -39,9 +48,7 @@ let main argv =
         let unMatched = unMatched.Filter(fun row -> not (leadEmailExists row leads))
 
         // get matched contact names
-        let contactNameOutput = getMatchedContactsByName unMatched.Rows contacts
-        contactNameOutput.Save(contactNameOutputFile)
-        let unMatched = unMatched.Filter(fun row -> not (contactNameExists row contacts))
+        let unMatched = matchContactOutput unMatched contacts getMatchedContactsByName contactNameExists contactNameOutputFile
 
         // get matched lead names
         let leadNameOutput = getMatchedLeadsByName unMatched.Rows leads
@@ -49,9 +56,7 @@ let main argv =
         let unMatched = unMatched.Filter(fun row -> not (leadNameExists row leads))
 
         // get matched fuzzy contact names
-        let contactFuzzyNameOutput = getMatchedContactsByFuzzyName unMatched.Rows contacts
-        contactFuzzyNameOutput.Save(contactNameFuzzyOutputFile)
-        let unMatched = unMatched.Filter(fun row -> not (contactFuzzyNameExists row contacts))
+        let unMatched = matchContactOutput unMatched contacts getMatchedContactsByFuzzyName contactFuzzyNameExists contactNameFuzzyOutputFile
 
         // get matched fuzzy lead names
         let leadFuzzyNameOutput = getMatchedLeadsByFuzzyName unMatched.Rows leads

@@ -56,6 +56,7 @@
     <Compile Include="Files.fs" />
     <Compile Include="Leads.fs" />
     <Compile Include="Contacts.fs" />
+    <Compile Include="Match.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <PropertyGroup>

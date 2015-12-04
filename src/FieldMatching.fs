@@ -35,3 +35,15 @@
             && String.Equals(record.LastName, inputRow.``Last Name``, StringComparison.OrdinalIgnoreCase)
         else
             false
+
+    let emailExists (inputRow:inputFile.Row) (contacts:seq<SourceRecord>) =
+        contacts 
+        |> Seq.exists(fun row -> emailMatches inputRow row)
+
+    let nameExists (inputRow:inputFile.Row) (contacts:seq<SourceRecord>) =
+        contacts 
+        |> Seq.exists(fun row -> nameMatches inputRow row)
+
+    let fuzzyNameExists (inputRow:inputFile.Row) (contacts:seq<SourceRecord>) =
+        contacts 
+        |> Seq.exists(fun row -> fuzzyNameMatches inputRow row)

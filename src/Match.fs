@@ -10,32 +10,33 @@
 
     let matchOutput         
         (knownLeads:'InputFile) 
-        (getMatched:seq<inputFile.Row> -> 'InputFile -> Runtime.CsvFile<'OutputRow>) 
+        (getMatched:array<inputFile.Row> -> 'InputFile -> Runtime.CsvFile<'OutputRow>) 
         (comparison:inputFile.Row -> 'InputFile -> bool)
         (outputFileName:string) 
-        (inputData:Runtime.CsvFile<inputFile.Row>) =
+        (inputData:array<inputFile.Row>) =
 
-        let matchedOutput = getMatched inputData.Rows knownLeads
+        let matchedOutput = getMatched inputData knownLeads
         matchedOutput.Save(outputFileName)
-        inputData.Filter(fun row -> not (comparison row knownLeads))
 
-    let getMatchedContactsByEmail (inputData:seq<inputFile.Row>) (contacts:array<SourceRecord>) =
-        getMatchedContactsByType inputData contacts "emails" contactEmailExists emailMatches
+        inputData |> Array.filter(fun row -> not (comparison row knownLeads))
 
-    let getMatchedContactsByName (inputData:seq<inputFile.Row>) (contacts:array<SourceRecord>) =
-        getMatchedContactsByType inputData contacts "names" contactNameExists nameMatches
+    let getMatchedContactsByEmail (inputData:array<inputFile.Row>) (contacts:array<SourceRecord>) =
+        getMatchedContactsByType inputData contacts "emails" emailExists emailMatches
 
-    let getMatchedContactsByFuzzyName (inputData:seq<inputFile.Row>) (contacts:array<SourceRecord>) =
-        getMatchedContactsByType inputData contacts "fuzzy names" contactFuzzyNameExists fuzzyNameMatches
+    let getMatchedLeadsByEmail (inputData:array<inputFile.Row>) (leads:array<SourceRecord>) =
+        getMatchedLeadsByType inputData leads "emails" emailExists emailMatches
 
-    let getMatchedLeadsByEmail (inputData:seq<inputFile.Row>) (leads:array<SourceRecord>) =
-        getMatchedLeadsByType inputData leads "emails" leadEmailExists emailMatches
+    let getMatchedContactsByName (inputData:array<inputFile.Row>) (contacts:array<SourceRecord>) =
+        getMatchedContactsByType inputData contacts "names" nameExists nameMatches
 
-    let getMatchedLeadsByName (inputData:seq<inputFile.Row>) (leads:array<SourceRecord>) =
-        getMatchedLeadsByType inputData leads "names" leadNameExists nameMatches
+    let getMatchedLeadsByName (inputData:array<inputFile.Row>) (leads:array<SourceRecord>) =
+        getMatchedLeadsByType inputData leads "names" nameExists nameMatches
 
-    let getMatchedLeadsByFuzzyName (inputData:seq<inputFile.Row>) (leads:array<SourceRecord>) =
-        getMatchedLeadsByType inputData leads "fuzzy names" leadFuzzyNameExists fuzzyNameMatches
+    let getMatchedContactsByFuzzyName (inputData:array<inputFile.Row>) (contacts:array<SourceRecord>) =
+        getMatchedContactsByType inputData contacts "fuzzy names" fuzzyNameExists fuzzyNameMatches
+
+    let getMatchedLeadsByFuzzyName (inputData:array<inputFile.Row>) (leads:array<SourceRecord>) =
+        getMatchedLeadsByType inputData leads "fuzzy names" fuzzyNameExists fuzzyNameMatches
 
     let matchAll (inputData:inputFile) (contactInput:contactInput) (leadInput:leadInput) =
         
@@ -49,10 +50,11 @@
             |> Seq.map(fun row -> Leads.convertLeadToRecord row)
             |> Seq.toArray
 
-        inputData 
-        |> matchOutput contacts getMatchedContactsByEmail contactEmailExists contactEmailOutputFile        
-        |> matchOutput leads getMatchedLeadsByEmail leadEmailExists leadEmailOutputFile
-        |> matchOutput contacts getMatchedContactsByName contactNameExists contactNameOutputFile
-        |> matchOutput leads getMatchedLeadsByName leadNameExists leadNameOutputFile
-        |> matchOutput contacts getMatchedContactsByFuzzyName contactFuzzyNameExists contactNameFuzzyOutputFile
-        |> matchOutput leads getMatchedLeadsByFuzzyName leadFuzzyNameExists leadNameFuzzyOutputFile
+        inputData.Rows 
+        |> Seq.toArray
+        |> matchOutput contacts getMatchedContactsByEmail emailExists contactEmailOutputFile        
+        |> matchOutput leads getMatchedLeadsByEmail emailExists leadEmailOutputFile
+        |> matchOutput contacts getMatchedContactsByName nameExists contactNameOutputFile
+        |> matchOutput leads getMatchedLeadsByName nameExists leadNameOutputFile
+        |> matchOutput contacts getMatchedContactsByFuzzyName fuzzyNameExists contactNameFuzzyOutputFile
+        |> matchOutput leads getMatchedLeadsByFuzzyName fuzzyNameExists leadNameFuzzyOutputFile

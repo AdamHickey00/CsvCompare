@@ -24,18 +24,6 @@
             Email = contact.Email
         }
 
-    let contactEmailExists (inputRow:inputFile.Row) (contacts:seq<SourceRecord>) =
-        contacts 
-        |> Seq.exists(fun row -> emailMatches inputRow row)
-
-    let contactNameExists (inputRow:inputFile.Row) (contacts:seq<SourceRecord>) =
-        contacts 
-        |> Seq.exists(fun row -> nameMatches inputRow row)
-
-    let contactFuzzyNameExists (inputRow:inputFile.Row) (contacts:seq<SourceRecord>) =
-        contacts 
-        |> Seq.exists(fun row -> fuzzyNameMatches inputRow row)
-
     let getContactOutputRow 
         (inputRow:inputFile.Row) 
         (compareFunc:inputFile.Row -> SourceRecord -> bool) 

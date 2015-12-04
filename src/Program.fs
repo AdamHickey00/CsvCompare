@@ -32,7 +32,9 @@ let main argv =
 
         // save unmatched records
         Console.WriteLine("Saving unmatched records...")
-        unMatched.Save(unMatchedOutputFile)
+        let blankInput = getBlankInputFile
+        let unMatchedFile = blankInput.Append unMatched
+        unMatchedFile.Save(unMatchedOutputFile)
 
         0
     

@@ -45,3 +45,7 @@
             Directory.CreateDirectory(outputFolder) |> ignore
 
     let httpPrefix = "https://na28.salesforce.com/"
+
+    let getBlankInputFile =
+        let blankFile = new inputFile()
+        blankFile.Take(0) // do this to remove sample row

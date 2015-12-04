@@ -24,18 +24,6 @@
             Email = lead.Email
         }
 
-    let leadEmailExists (inputRow:inputFile.Row) (leads:seq<SourceRecord>) =
-        leads 
-        |> Seq.exists(fun row -> emailMatches inputRow row)
-
-    let leadNameExists (inputRow:inputFile.Row) (leads:seq<SourceRecord>) =
-        leads 
-        |> Seq.exists(fun row -> nameMatches inputRow row)
-
-    let leadFuzzyNameExists (inputRow:inputFile.Row) (leads:seq<SourceRecord>) =
-        leads 
-        |> Seq.exists(fun row -> fuzzyNameMatches inputRow row)
-
     let getLeadOutputRow (inputRow:inputFile.Row) (compareFunc:inputFile.Row -> SourceRecord -> bool) (leads:seq<SourceRecord>) =
         let result = 
             leads 

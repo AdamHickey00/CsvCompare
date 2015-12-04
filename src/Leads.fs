@@ -1,6 +1,7 @@
 ﻿module Leads
 
     open Files
+    open FieldMatching
     open FSharp.Data
     open System
     open System.Linq
@@ -12,49 +13,37 @@
     let leadNameOutputFile = outputFolder + "LeadMatchedNames.csv"
     let leadNameFuzzyOutputFile = outputFolder + "LeadMatchedNamesFuzzy.csv"
 
-    let leadEmailMatches (inputRow:inputFile.Row) (row:leadInput.Row) =           
-        not(String.IsNullOrEmpty(row.Email))
-            && String.Equals(row.Email, inputRow.``Email Address``, StringComparison.OrdinalIgnoreCase)
+    let convertLeadToRecord (lead:leadInput.Row) : SourceRecord =
+        {
+            AccountLongID = ""
+            ContactLongID = ""
+            LeadLongID = lead.``Lead Long ID``
+            LeadOwner = lead.``Lead Owner``
+            FirstName = lead.``First Name``
+            LastName = lead.``Last Name``
+            Email = lead.Email
+        }
 
-    let leadNameMatches (inputRow:inputFile.Row) (row:leadInput.Row) = 
-        not(String.IsNullOrEmpty(row.``First Name``) 
-            || String.IsNullOrEmpty(row.``Last Name``))
-        && String.Equals(row.``First Name``, inputRow.``First Name``, StringComparison.OrdinalIgnoreCase)
-        && String.Equals(row.``Last Name``, inputRow.``Last Name``, StringComparison.OrdinalIgnoreCase)
+    let leadEmailExists (inputRow:inputFile.Row) (leads:seq<SourceRecord>) =
+        leads 
+        |> Seq.exists(fun row -> emailMatches inputRow row)
 
-    let leadNameFuzzyMatch (inputRow:inputFile.Row) (row:leadInput.Row) = 
+    let leadNameExists (inputRow:inputFile.Row) (leads:seq<SourceRecord>) =
+        leads 
+        |> Seq.exists(fun row -> nameMatches inputRow row)
 
-        if row.``First Name``.Length > 2 && inputRow.``First Name``.Length > 2 then
-            // first three characters match plus last name
-            let firstThreeInput = inputRow.``First Name``.Substring(0, 3)
-            let firstThreeLead = row.``First Name``.Substring(0, 3)
+    let leadFuzzyNameExists (inputRow:inputFile.Row) (leads:seq<SourceRecord>) =
+        leads 
+        |> Seq.exists(fun row -> fuzzyNameMatches inputRow row)
 
-            not(String.IsNullOrEmpty(row.``First Name``) || String.IsNullOrEmpty(row.``Last Name``))
-            && String.Equals(firstThreeLead, firstThreeInput, StringComparison.OrdinalIgnoreCase)
-            && String.Equals(row.``Last Name``, inputRow.``Last Name``, StringComparison.OrdinalIgnoreCase)
-        else
-            false
-
-    let leadEmailExists (inputRow:inputFile.Row) (leads:leadInput) =
-        leads.Rows 
-        |> Seq.exists(fun row -> leadEmailMatches inputRow row)
-
-    let leadNameExists (inputRow:inputFile.Row) (leads:leadInput) =
-        leads.Rows 
-        |> Seq.exists(fun row -> leadNameMatches inputRow row)
-
-    let leadFuzzyNameExists (inputRow:inputFile.Row) (leads:leadInput) =
-        leads.Rows 
-        |> Seq.exists(fun row -> leadNameFuzzyMatch inputRow row)
-
-    let getLeadOutputRow (inputRow:inputFile.Row) (compareFunc:inputFile.Row -> leadInput.Row -> bool) (leads:leadInput) =
+    let getLeadOutputRow (inputRow:inputFile.Row) (compareFunc:inputFile.Row -> SourceRecord -> bool) (leads:seq<SourceRecord>) =
         let result = 
-            leads.Rows 
+            leads 
             |> Seq.filter(fun row -> compareFunc inputRow row)
             |> Seq.map(fun row -> 
                         new leadOutput.Row(
-                            httpPrefix + row.``Lead Long ID``, 
-                            row.``Lead Owner``, 
+                            httpPrefix + row.LeadLongID, 
+                            row.LeadOwner, 
                             inputRow.``First Name``, 
                             inputRow.``Last Name``, 
                             inputRow.Company,
@@ -72,10 +61,10 @@
 
     let getMatchedLeadsByType
         (inputData:seq<inputFile.Row>) 
-        (contacts:leadInput)
+        (contacts:seq<SourceRecord>)
         (matchType:string)
-        (rowExists:inputFile.Row -> leadInput -> bool)
-        (rowMatches:inputFile.Row -> leadInput.Row -> bool)
+        (rowExists:inputFile.Row -> seq<SourceRecord> -> bool)
+        (rowMatches:inputFile.Row -> SourceRecord -> bool)
          =
 
         // matched leads by type

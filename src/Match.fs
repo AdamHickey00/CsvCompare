@@ -1,7 +1,8 @@
 ﻿module Match
 
     open Contacts
-    open Files
+    open FieldMatching
+    open Files    
     open FSharp.Data
     open Leads
     open System
@@ -18,25 +19,32 @@
         matchedOutput.Save(outputFileName)
         inputData.Filter(fun row -> not (comparison row knownLeads))
 
-    let getMatchedContactsByEmail (inputData:seq<inputFile.Row>) (contacts:contactInput) =
-        getMatchedContactsByType inputData contacts "emails" contactEmailExists contactEmailMatches
+    let getMatchedContactsByEmail (inputData:seq<inputFile.Row>) (contacts:seq<SourceRecord>) =
+        getMatchedContactsByType inputData contacts "emails" contactEmailExists emailMatches
 
-    let getMatchedContactsByName (inputData:seq<inputFile.Row>) (contacts:contactInput) =
-        getMatchedContactsByType inputData contacts "names" contactNameExists contactNameMatches
+    let getMatchedContactsByName (inputData:seq<inputFile.Row>) (contacts:seq<SourceRecord>) =
+        getMatchedContactsByType inputData contacts "names" contactNameExists nameMatches
 
-    let getMatchedContactsByFuzzyName (inputData:seq<inputFile.Row>) (contacts:contactInput) =
-        getMatchedContactsByType inputData contacts "fuzzy names" contactFuzzyNameExists contactNameFuzzyMatch
+    let getMatchedContactsByFuzzyName (inputData:seq<inputFile.Row>) (contacts:seq<SourceRecord>) =
+        getMatchedContactsByType inputData contacts "fuzzy names" contactFuzzyNameExists fuzzyNameMatches
 
-    let getMatchedLeadsByEmail (inputData:seq<inputFile.Row>) (leads:leadInput) =
-        getMatchedLeadsByType inputData leads "emails" leadEmailExists leadEmailMatches
+    let getMatchedLeadsByEmail (inputData:seq<inputFile.Row>) (leads:seq<SourceRecord>) =
+        getMatchedLeadsByType inputData leads "emails" leadEmailExists emailMatches
 
-    let getMatchedLeadsByName (inputData:seq<inputFile.Row>) (leads:leadInput) =
-        getMatchedLeadsByType inputData leads "names" leadNameExists leadNameMatches
+    let getMatchedLeadsByName (inputData:seq<inputFile.Row>) (leads:seq<SourceRecord>) =
+        getMatchedLeadsByType inputData leads "names" leadNameExists nameMatches
 
-    let getMatchedLeadsByFuzzyName (inputData:seq<inputFile.Row>) (leads:leadInput) =
-        getMatchedLeadsByType inputData leads "fuzzy names" leadFuzzyNameExists leadNameFuzzyMatch
+    let getMatchedLeadsByFuzzyName (inputData:seq<inputFile.Row>) (leads:seq<SourceRecord>) =
+        getMatchedLeadsByType inputData leads "fuzzy names" leadFuzzyNameExists fuzzyNameMatches
 
-    let matchAll (inputData:inputFile) (contacts:contactInput) (leads:leadInput) =
+    let matchAll (inputData:inputFile) (contactInput:contactInput) (leadInput:leadInput) =
+        
+        let contacts = 
+            contactInput.Rows |> Seq.map(fun row -> Contacts.convertContactToRecord row)
+
+        let leads = 
+            leadInput.Rows |> Seq.map(fun row -> Leads.convertLeadToRecord row)
+
         inputData 
         |> matchOutput contacts getMatchedContactsByEmail contactEmailExists contactEmailOutputFile        
         |> matchOutput leads getMatchedLeadsByEmail leadEmailExists leadEmailOutputFile

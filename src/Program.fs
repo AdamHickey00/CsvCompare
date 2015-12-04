@@ -8,14 +8,13 @@ open System.Linq
 
 [<EntryPoint>]
 let main argv = 
-    let allInputFilesPresent = checkInputFiles
 
-    if allInputFilesPresent then
+    if checkInputFiles(userInputFiles) then
         ensureOutputFolderExists
 
-        let inputData = inputFile.Load(inputFileLocation)
-        let contacts = contactInput.Load(contactsLocation)
-        let leads = leadInput.Load(leadsLocation)
+        let inputData = inputFile.Load(input.FullPath)
+        let contacts = contactInput.Load(contact.FullPath)
+        let leads = leadInput.Load(leads.FullPath)
 
         deleteFiles [contactEmailOutputFile; 
                      leadEmailOutputFile; 

@@ -54,6 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Files.fs" />
+    <Compile Include="FieldMatching.fs" />
     <Compile Include="Leads.fs" />
     <Compile Include="Contacts.fs" />
     <Compile Include="Match.fs" />

@@ -1,6 +1,7 @@
 ﻿module Contacts
     
     open Files
+    open FieldMatching
     open FSharp.Data
     open System
     open System.Linq
@@ -12,49 +13,41 @@
     let contactNameOutputFile = outputFolder + "ContactMatchedNames.csv"
     let contactNameFuzzyOutputFile = outputFolder + "ContactMatchedNamesFuzzy.csv"
 
-    let contactEmailMatches (inputRow:inputFile.Row) (row:contactInput.Row) =           
-        not(String.IsNullOrEmpty(row.Email))
-            && String.Equals(row.Email, inputRow.``Email Address``, StringComparison.OrdinalIgnoreCase)
+    let convertContactToRecord (contact:contactInput.Row) : SourceRecord =
+        {
+            AccountLongID = contact.``Account Long ID``
+            ContactLongID = contact.``Contact Long ID``
+            LeadLongID = ""
+            LeadOwner = ""
+            FirstName = contact.``First Name``
+            LastName = contact.``Last Name``
+            Email = contact.Email
+        }
 
-    let contactNameMatches (inputRow:inputFile.Row) (row:contactInput.Row) = 
-        not(String.IsNullOrEmpty(row.``First Name``) 
-            || String.IsNullOrEmpty(row.``Last Name``))
-        && String.Equals(row.``First Name``, inputRow.``First Name``, StringComparison.OrdinalIgnoreCase)
-        && String.Equals(row.``Last Name``, inputRow.``Last Name``, StringComparison.OrdinalIgnoreCase)
+    let contactEmailExists (inputRow:inputFile.Row) (contacts:seq<SourceRecord>) =
+        contacts 
+        |> Seq.exists(fun row -> emailMatches inputRow row)
 
-    let contactNameFuzzyMatch (inputRow:inputFile.Row) (row:contactInput.Row) = 
+    let contactNameExists (inputRow:inputFile.Row) (contacts:seq<SourceRecord>) =
+        contacts 
+        |> Seq.exists(fun row -> nameMatches inputRow row)
 
-        if row.``First Name``.Length > 2 && inputRow.``First Name``.Length > 2 then
-            // first three characters match plus last name
-            let firstThreeInput = inputRow.``First Name``.Substring(0, 3)
-            let firstThreeContact = row.``First Name``.Substring(0, 3)
+    let contactFuzzyNameExists (inputRow:inputFile.Row) (contacts:seq<SourceRecord>) =
+        contacts 
+        |> Seq.exists(fun row -> fuzzyNameMatches inputRow row)
 
-            not(String.IsNullOrEmpty(row.``First Name``) || String.IsNullOrEmpty(row.``Last Name``))
-            && String.Equals(firstThreeContact, firstThreeInput, StringComparison.OrdinalIgnoreCase)
-            && String.Equals(row.``Last Name``, inputRow.``Last Name``, StringComparison.OrdinalIgnoreCase)
-        else
-            false
+    let getContactOutputRow 
+        (inputRow:inputFile.Row) 
+        (compareFunc:inputFile.Row -> SourceRecord -> bool) 
+        (contacts:seq<SourceRecord>) = 
 
-    let contactEmailExists (inputRow:inputFile.Row) (contacts:contactInput) =
-        contacts.Rows 
-        |> Seq.exists(fun row -> contactEmailMatches inputRow row)
-
-    let contactNameExists (inputRow:inputFile.Row) (contacts:contactInput) =
-        contacts.Rows 
-        |> Seq.exists(fun row -> contactNameMatches inputRow row)
-
-    let contactFuzzyNameExists (inputRow:inputFile.Row) (contacts:contactInput) =
-        contacts.Rows 
-        |> Seq.exists(fun row -> contactNameFuzzyMatch inputRow row)
-
-    let getContactOutputRow (inputRow:inputFile.Row) (compareFunc:inputFile.Row -> contactInput.Row -> bool) (contacts:contactInput) = 
         let result = 
-            contacts.Rows 
+            contacts
             |> Seq.filter(fun row -> compareFunc inputRow row)
             |> Seq.map(fun row -> 
                         new contactOutput.Row(
-                            httpPrefix + row.``Account Long ID``, 
-                            httpPrefix + row.``Contact Long ID``, 
+                            httpPrefix + row.AccountLongID, 
+                            httpPrefix + row.ContactLongID, 
                             inputRow.``First Name``, 
                             inputRow.``Last Name``, 
                             inputRow.Company,
@@ -72,10 +65,10 @@
 
     let getMatchedContactsByType
         (inputData:seq<inputFile.Row>) 
-        (contacts:contactInput)
+        (contacts:seq<SourceRecord>)
         (matchType:string)
-        (rowExists:inputFile.Row -> contactInput -> bool)
-        (rowMatches:inputFile.Row -> contactInput.Row -> bool)
+        (rowExists:inputFile.Row -> seq<SourceRecord> -> bool)
+        (rowMatches:inputFile.Row -> SourceRecord -> bool)
          =
 
         // matched contacts by type

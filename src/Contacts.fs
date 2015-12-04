@@ -70,50 +70,24 @@
         let contactOutput = new contactOutput()
         contactOutput.Take(0) // do this to remove sample row
 
-    let getMatchedContactsByEmail (inputData:seq<inputFile.Row>) (contacts:contactInput) =
+    let getMatchedContactsByType
+        (inputData:seq<inputFile.Row>) 
+        (contacts:contactInput)
+        (matchType:string)
+        (rowExists:inputFile.Row -> contactInput -> bool)
+        (rowMatches:inputFile.Row -> contactInput.Row -> bool)
+         =
 
-        // matched contacts by email
-        Console.WriteLine("Checking contact records for emails...")
-        let contactEmailOutput = getBlankContactOutput
+        // matched contacts by type
+        Console.WriteLine(sprintf "Checking contact records for %s..." matchType)
+        let outputFile = getBlankContactOutput
 
-        let contactMatchedEmails = 
+        let contactMatchedRecords = 
             inputData
-            |> Seq.filter(fun row -> contactEmailExists row contacts)
-            |> Seq.map(fun row -> getContactOutputRow row contactEmailMatches contacts)
+            |> Seq.filter(fun row -> rowExists row contacts)
+            |> Seq.map(fun row -> getContactOutputRow row rowMatches contacts)
             |> Seq.toArray
 
-        Console.WriteLine(sprintf "Found %i matched contact emails" (contactMatchedEmails.Count()))
+        Console.WriteLine(sprintf "Found %i matched contact %s" (contactMatchedRecords.Count()) matchType)
 
-        contactEmailOutput.Append contactMatchedEmails
-
-    let getMatchedContactsByName (inputData:seq<inputFile.Row>) (contacts:contactInput) =
-
-        // matched contacts by name
-        Console.WriteLine("Checking contact records for names...")
-        let contactNameOutput = getBlankContactOutput
-
-        let contactMatchedNames = 
-            inputData
-            |> Seq.filter(fun row -> contactNameExists row contacts)
-            |> Seq.map(fun row -> getContactOutputRow row contactNameMatches contacts)
-            |> Seq.toArray
-
-        Console.WriteLine(sprintf "Found %i matched contact names" (contactMatchedNames.Count()))
-
-        contactNameOutput.Append contactMatchedNames
-
-    let getMatchedContactsByFuzzyName (inputData:seq<inputFile.Row>) (contacts:contactInput) =
-
-        // matched contacts by fuzzy name
-        Console.WriteLine("Checking contact records for fuzzy names...")
-        let contactFuzzyNameOutput = getBlankContactOutput
-
-        let contactMatchedFuzzyNames = 
-            inputData
-            |> Seq.filter(fun row -> contactFuzzyNameExists row contacts)
-            |> Seq.map(fun row -> getContactOutputRow row contactNameFuzzyMatch contacts)
-            |> Seq.toArray
-
-        Console.WriteLine(sprintf "Found %i matched contact fuzzy names" (contactMatchedFuzzyNames.Count()))
-
-        contactFuzzyNameOutput.Append contactMatchedFuzzyNames
+        outputFile.Append contactMatchedRecords

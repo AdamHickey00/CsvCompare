@@ -70,50 +70,24 @@
         let leadOutput = new leadOutput()
         leadOutput.Take(0) // do this to remove sample row
 
-    let getMatchedLeadsByEmail (inputData:seq<inputFile.Row>) (leads:leadInput) =
+    let getMatchedLeadsByType
+        (inputData:seq<inputFile.Row>) 
+        (contacts:leadInput)
+        (matchType:string)
+        (rowExists:inputFile.Row -> leadInput -> bool)
+        (rowMatches:inputFile.Row -> leadInput.Row -> bool)
+         =
 
-        // matched leads by email
-        Console.WriteLine("Checking lead records for emails...")
-        let leadEmailOutput = getBlankLeadOutput
+        // matched leads by type
+        Console.WriteLine(sprintf "Checking lead records for %s..." matchType)
+        let outputFile = getBlankLeadOutput
 
-        let leadMatchedEmails = 
+        let leadMatchedRecords = 
             inputData
-            |> Seq.filter(fun row -> leadEmailExists row leads)
-            |> Seq.map(fun row -> getLeadOutputRow row leadEmailMatches leads)
+            |> Seq.filter(fun row -> rowExists row contacts)
+            |> Seq.map(fun row -> getLeadOutputRow row rowMatches contacts)
             |> Seq.toArray
 
-        Console.WriteLine(sprintf "Found %i matched lead emails" (leadMatchedEmails.Count()))
+        Console.WriteLine(sprintf "Found %i matched lead %s" (leadMatchedRecords.Count()) matchType)
 
-        leadEmailOutput.Append leadMatchedEmails
-
-    let getMatchedLeadsByName (inputData:seq<inputFile.Row>) (leads:leadInput) =
-
-        // matched leads by name
-        Console.WriteLine("Checking lead records for names...")
-        let leadNameOutput = getBlankLeadOutput
-
-        let leadMatchedNames = 
-            inputData
-            |> Seq.filter(fun row -> leadNameExists row leads)
-            |> Seq.map(fun row -> getLeadOutputRow row leadNameMatches leads)
-            |> Seq.toArray
-
-        Console.WriteLine(sprintf "Found %i matched lead names" (leadMatchedNames.Count()))
-
-        leadNameOutput.Append leadMatchedNames
-
-    let getMatchedLeadsByFuzzyName (inputData:seq<inputFile.Row>) (leads:leadInput) =
-
-        // matched leads by fuzzy name
-        Console.WriteLine("Checking lead records for fuzzy names...")
-        let leadFuzzyNameOutput = getBlankLeadOutput
-
-        let leadMatchedFuzzyNames = 
-            inputData
-            |> Seq.filter(fun row -> leadFuzzyNameExists row leads)
-            |> Seq.map(fun row -> getLeadOutputRow row leadNameFuzzyMatch leads)
-            |> Seq.toArray
-
-        Console.WriteLine(sprintf "Found %i matched lead fuzzy names" (leadMatchedFuzzyNames.Count()))
-
-        leadFuzzyNameOutput.Append leadMatchedFuzzyNames
+        outputFile.Append leadMatchedRecords

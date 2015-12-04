@@ -19,31 +19,35 @@
         matchedOutput.Save(outputFileName)
         inputData.Filter(fun row -> not (comparison row knownLeads))
 
-    let getMatchedContactsByEmail (inputData:seq<inputFile.Row>) (contacts:seq<SourceRecord>) =
+    let getMatchedContactsByEmail (inputData:seq<inputFile.Row>) (contacts:array<SourceRecord>) =
         getMatchedContactsByType inputData contacts "emails" contactEmailExists emailMatches
 
-    let getMatchedContactsByName (inputData:seq<inputFile.Row>) (contacts:seq<SourceRecord>) =
+    let getMatchedContactsByName (inputData:seq<inputFile.Row>) (contacts:array<SourceRecord>) =
         getMatchedContactsByType inputData contacts "names" contactNameExists nameMatches
 
-    let getMatchedContactsByFuzzyName (inputData:seq<inputFile.Row>) (contacts:seq<SourceRecord>) =
+    let getMatchedContactsByFuzzyName (inputData:seq<inputFile.Row>) (contacts:array<SourceRecord>) =
         getMatchedContactsByType inputData contacts "fuzzy names" contactFuzzyNameExists fuzzyNameMatches
 
-    let getMatchedLeadsByEmail (inputData:seq<inputFile.Row>) (leads:seq<SourceRecord>) =
+    let getMatchedLeadsByEmail (inputData:seq<inputFile.Row>) (leads:array<SourceRecord>) =
         getMatchedLeadsByType inputData leads "emails" leadEmailExists emailMatches
 
-    let getMatchedLeadsByName (inputData:seq<inputFile.Row>) (leads:seq<SourceRecord>) =
+    let getMatchedLeadsByName (inputData:seq<inputFile.Row>) (leads:array<SourceRecord>) =
         getMatchedLeadsByType inputData leads "names" leadNameExists nameMatches
 
-    let getMatchedLeadsByFuzzyName (inputData:seq<inputFile.Row>) (leads:seq<SourceRecord>) =
+    let getMatchedLeadsByFuzzyName (inputData:seq<inputFile.Row>) (leads:array<SourceRecord>) =
         getMatchedLeadsByType inputData leads "fuzzy names" leadFuzzyNameExists fuzzyNameMatches
 
     let matchAll (inputData:inputFile) (contactInput:contactInput) (leadInput:leadInput) =
         
         let contacts = 
-            contactInput.Rows |> Seq.map(fun row -> Contacts.convertContactToRecord row)
+            contactInput.Rows 
+            |> Seq.map(fun row -> Contacts.convertContactToRecord row)
+            |> Seq.toArray
 
         let leads = 
-            leadInput.Rows |> Seq.map(fun row -> Leads.convertLeadToRecord row)
+            leadInput.Rows 
+            |> Seq.map(fun row -> Leads.convertLeadToRecord row)
+            |> Seq.toArray
 
         inputData 
         |> matchOutput contacts getMatchedContactsByEmail contactEmailExists contactEmailOutputFile        

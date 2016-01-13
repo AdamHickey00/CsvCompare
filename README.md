@@ -7,10 +7,26 @@ matches bazed on email, name, and fuzzy name.
 
 The solution can be built using visual studio 2015.
 
+Or it can be built on mono,
+
+Initial build:
+```
+mono ./.paket/paket.bootstrapper.exe
+```
+Then,
+```
+mono ./.paket/paket.exe install
+```
+
+Mono build
+```shell
+./build.sh
+```
+
 ## Template Files
 
-Template files are in the repository in the 
-src/data/templates folder. The headers in these files 
+Template files are in the repository in the
+src/data/templates folder. The headers in these files
 must match their corresponding input files.
 
 	1. ContactInput.csv - Contacts sample with header

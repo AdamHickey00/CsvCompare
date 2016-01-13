@@ -5,3 +5,8 @@ Obj
 src/data/input/*.csv
 src/data/output/*.csv
 src/data/*.csv
+.DS_Store
+/build
+.paket/paket.exe
+.fake
+/.vs
